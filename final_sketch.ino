@@ -28,3 +28,7 @@ void loop() {
 void servoMotor() {
   
 }
+
+void peristalticPump() {
+
+}
