@@ -32,3 +32,6 @@ void servoMotor() {
 void peristalticPump() {
 
 }
+
+void mixing() {
+}
