@@ -23,6 +23,12 @@ Hydroponics system
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 Servo myServo;
+float inputTDS;
+float targetTDS = 0.371; //mg/mL
+float massNeeded;
+float mixerVolume = 500; // (mL) calculate later
+float dispenserflowrate = 50; //mg/s
+float servoOpenTime;
 
 void setup() {
   // put your setup code here, to run once:
@@ -76,7 +82,12 @@ void loop() {
     }
     elif (stateMachine == 3){
       //nutrient pumping (John) code
-      
+      //inputTDS = getTDS();
+      massNeeded = (targetTDS - inputTDS)/mixerVolume;
+      if (massNeeded > 0) {
+        servoOpenTime = massNeeded/dispenserflowrate;
+        servoMotor(servoOpenTime);
+      }
     }
     elif (stateMachine == 4){
       //mixing (Grace)
