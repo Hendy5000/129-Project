@@ -1,0 +1,13 @@
+Part	Connects to	Wires
+Power supply	Shield EXT_PWR terminal
+DC mixing motor	Shield M1	
+Submersible pump	Shield M2	
+Diaphragm pump	Shield M3	
+Peristaltic pump	Shield M4	
+Servo	Shield SERVO_2 header	
+Liquid level sensor	Pin 30	
+TDS sensor	A2
+pH probe	A3
+OLED	Pin 20 (SDA), Pin 21 (SCL)
+Start button	Pin 2 (my pick, not in the PDF)	
+Emergency stop	Pin 18 (my pick, not in the PDF)
