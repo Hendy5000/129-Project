@@ -6,14 +6,16 @@ pH_max = 6.5
 pH_target = 6.0
 solution_vol= 250mL
 pump_rate = 35.4mL/min
-k_response = ?
-mix_time = ?
+k_response = 0.18
+mix_time = 
 settle_time = 30s
 num_samples = 10
 max_doses = ?
 time_limit = ?
+V4, V7 = probe calibration voltages
 
 Function readpH ():
+//Takes 10 quick readings, averages them, and turns the voltage into pH.
 sum = 0
 Repeat num_samples times:
 V=analogRead(A3)
@@ -24,15 +26,23 @@ pH=7+(V_avg-V7) * (3/(V7-V4))
 return pH
 
 Function measureStablePH ():
+//A careful reading: mix first, let the probe settle, then read.
 stirrer ON for mix_time
 stirrer off (or slow)
 wait settle_time
 return read pH()
 
-Function calculatePulse(pH)
+Function calculatePulse(pH):
+// Works out how many seconds to run the pump.
+// Bigger gap from target = longer pump time (proportional control).
+
+// how far below 6.0 I am
 error=pH_target-pH
+
+ // mL needed to close the gap
 dose_mL=(error/k_responses)*(solution_vol/250)
-dose_mL=dose_mL*0.5
+
+// turn mL into seconds of pumping
 pulse=dose_mL/pump_rate
 
 IF pulse < min_pulse then pulse=min_pulse
@@ -40,20 +50,31 @@ IF pulse > max_pulse then pulse=max_pulse
 return pulse
 
 Function adjust pH():
+// The team's main program calls this when it reaches the pH stage.
 display "stage: adjust pH"
 doses = 0
 start_time = now()
 pH = measureStablePH()
 display "pH":+ pH
 
+// -------- CASE 1: pH is already too high --------
+    // Baking soda can't lower pH, so there's nothing I can do.
 IF pH > pH_max then
 display "pH high - cannot lower"
 return "pH_too_high"
 
+// -------- CASE 2: pH too low -> add doses --------
+    // Keep looping while pH is below 5.9 (6.0 - 0.1).
+    // Each time around: check safety, dose, mix, re-measure.
+while pH < (pH_target - pH_deadband):
+
+ // SAFETY CHECK: too many doses or taking too long
+        // (empty bottle, blocked tube, or broken probe)
 IF doses >= max_doses or (now()-start_time) > time_limit then 
 pump off
 display "pH timeout" + pH
 
+ // how long to run pump this time
 pulse = calculatePulse (pH)
 stirrer on
 pump on
@@ -63,10 +84,13 @@ doses = doses + 1
 pH = measureStablePH()
 display "pH: "+pH+" Dose #" + doses
 
+// SAFETY CHECK 2: did that dose push pH too high?
 IF pH > pH_max then
 display "pH overshoot"
 return "overshoot"
 
-IF pH > pH_min and pH <= pH_max
+ // -------- CASE 3: pH is in range --------
+    // Loop ended, so pH is at least 5.9. Confirm it's 5.5-6.5.
+IF pH >= pH_min and pH <= pH_max
 display "pH OK:" + pH
 return "pH_done"
