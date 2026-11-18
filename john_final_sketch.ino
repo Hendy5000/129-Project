@@ -6,6 +6,7 @@ Hydroponics system
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Servo.h>
 
 //hardware map
 #define STARTBUTTONPIN
@@ -28,8 +29,6 @@ float targetTDS = 0.371; //mg/mL
 float massNeeded;
 float mixerVolume = 500; // (mL) calculate later
 float dispenserflowrate = 50; //mg/s
-float servoOpenTime;
-
 unsigned long dispensingStartTime = 0;
 unsigned long servoOpenTime = 0;
 
