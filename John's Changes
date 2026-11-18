@@ -1,1 +1,42 @@
+#include <Servo.h>
 
+
+#define SERVOPIN
+
+Servo myServo;
+float inputTDS;
+float targetTDS = 0.371; //mg/mL
+float massNeeded;
+float mixerVolume = 500; // (mL) calculate later
+float dispenserflowrate = 50; //mg/s
+unsigned long dispensingStartTime = 0;
+unsigned long servoOpenTime = 0;
+
+bool dispensingStarted = false;
+
+    elif (stateMachine == 3){
+        //nutrient pumping (John) code
+        // STEP 1: Calculate required nutrient mass
+        if (!dispensingStarted) {
+                // inputTDS = getTDS();
+                massNeeded = (targetTDS - inputTDS) * mixerVolume;
+                if (massNeeded > 0) {    
+                    servoOpenTime = (massNeeded / dispenserflowrate) * 1000;
+                    myServo.write(90);
+                    dispensingStartTime = millis();
+                    dispensingStarted = true;
+                }
+        }
+        if (dispensingStarted) {
+                if (millis() - dispensingStartTime >= servoOpenTime) {
+                    myServo.write(0);
+                    dispensingStarted = false;
+                }
+        }
+    }
+    
+void servoMotor(float openTime) {
+  myServo.write(90);
+  delay(openTime);
+  myServo.write(0);
+}
