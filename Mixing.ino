@@ -6,7 +6,7 @@ else if (stateMachine == 4) {        // main loop that jack made
   mixTimer = millis();               // records the time that the mixing starts at
   }
 
-  if (millis() - mixTimer > MIX_TIME) {    // Will check if 110 s has passed, the time needs to be defined somewhere in the setup
+  if (millis() - mixTimer > MIX_TIME) {    // Will check if 110 s has passed, the mix time needs to be defined somewhere in the setup
     motor.run(RELEASE);                    // Will stop the motor
     mixTimer = 0;                          // resets the mixing timer to 0
     stateMachine = 5;                      // move on to mixture pumping out of the mixing tank
