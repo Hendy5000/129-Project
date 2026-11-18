@@ -2,4 +2,71 @@
 //runs after dispensing + mixing
 
 pH_min = 5.5
-pH_
+pH_max = 6.5
+pH_target = 6.0
+solution_vol= 250mL
+pump_rate = 35.4mL/min
+k_response = ?
+mix_time = ?
+settle_time = 30s
+num_samples = 10
+max_doses = ?
+time_limit = ?
+
+Function readpH ():
+sum = 0
+Repeat num_samples times:
+V=analogRead(A3)
+sum=sum+V
+wait 100ms
+Vavg=sum/num_samples
+pH=7+(V_avg-V7) * (3/(V7-V4))
+return pH
+
+Function measureStablePH ():
+stirrer ON for mix_time
+stirrer off (or slow)
+wait settle_time
+return read pH()
+
+Function calculatePulse(pH)
+error=pH_target-pH
+dose_mL=(error/k_responses)*(solution_vol/250)
+dose_mL=dose_mL*0.5
+pulse=dose_mL/pump_rate
+
+IF pulse < min_pulse then pulse=min_pulse
+IF pulse > max_pulse then pulse=max_pulse
+return pulse
+
+Function adjust pH():
+display "stage: adjust pH"
+doses = 0
+start_time = now()
+pH = measureStablePH()
+display "pH":+ pH
+
+IF pH > pH_max then
+display "pH high - cannot lower"
+return "pH_too_high"
+
+IF doses >= max_doses or (now()-start_time) > time_limit then 
+pump off
+display "pH timeout" + pH
+
+pulse = calculatePulse (pH)
+stirrer on
+pump on
+wait pulse seconds
+pump off
+doses = doses + 1
+pH = measureStablePH()
+display "pH: "+pH+" Dose #" + doses
+
+IF pH > pH_max then
+display "pH overshoot"
+return "overshoot"
+
+IF pH > pH_min and pH <= pH_max
+display "pH OK:" + pH
+return "pH_done"
