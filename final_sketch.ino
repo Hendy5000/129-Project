@@ -65,22 +65,22 @@ void loop() {
     if (stateMachine == 0){
       //sensing (Jack) code
     }
-    elif (stateMachine == 1){
+    else if (stateMachine == 1){
       //water pump (Caleb) code
     }
-    elif (stateMachine == 2){
+    else if (stateMachine == 2){
       //pH pumping (Mabel) code
     }
-    elif (stateMachine == 3){
+    else if (stateMachine == 3){
       //nutrient pumping (John) code
     }
-    elif (stateMachine == 4){
+    else if (stateMachine == 4){
       //mixing (Grace)
     }
-    elif (stateMachine == 5){
+    else if (stateMachine == 5){
       //mixing pumping state (Caleb)
     }
-    elif (stateMachine == 6){
+    else if (stateMachine == 6){
       //waiting code
     }
   }
