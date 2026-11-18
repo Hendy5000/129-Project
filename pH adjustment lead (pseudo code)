@@ -7,11 +7,11 @@ pH_target = 6.0
 solution_vol= 250mL
 pump_rate = 35.4mL/min
 k_response = 0.18
-mix_time = 
+mix_time = 110s
 settle_time = 30s
 num_samples = 10
-max_doses = ?
-time_limit = ?
+max_doses = 8
+time_limit = 240s
 V4, V7 = probe calibration voltages
 
 Function readpH ():
