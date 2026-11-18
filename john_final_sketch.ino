@@ -30,6 +30,11 @@ float mixerVolume = 500; // (mL) calculate later
 float dispenserflowrate = 50; //mg/s
 float servoOpenTime;
 
+unsigned long dispensingStartTime = 0;
+unsigned long servoOpenTime = 0;
+
+bool dispensingStarted = false;
+
 void setup() {
   // put your setup code here, to run once:
   //Initializing important variables
@@ -82,11 +87,22 @@ void loop() {
     }
     elif (stateMachine == 3){
       //nutrient pumping (John) code
-      //inputTDS = getTDS();
-      massNeeded = (targetTDS - inputTDS)*mixerVolume;
-      if (massNeeded > 0) {
-        servoOpenTime = massNeeded/dispenserflowrate;
-        servoMotor(servoOpenTime*1000);
+          // STEP 1: Calculate required nutrient mass
+    if (!dispensingStarted) {
+            // inputTDS = getTDS();
+            massNeeded = (targetTDS - inputTDS) * mixerVolume;
+            if (massNeeded > 0) {    
+                servoOpenTime = (massNeeded / dispenserflowrate) * 1000;
+                myServo.write(90);
+                dispensingStartTime = millis();
+                dispensingStarted = true;
+            }
+      }
+      if (dispensingStarted) {
+            if (millis() - dispensingStartTime >= servoOpenTime) {
+                myServo.write(0);
+                dispensingStarted = false;
+            }
       }
     }
     elif (stateMachine == 4){
