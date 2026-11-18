@@ -86,24 +86,24 @@ void loop() {
       //pH pumping (Mabel) code
     }
     elif (stateMachine == 3){
-      //nutrient pumping (John) code
-          // STEP 1: Calculate required nutrient mass
-    if (!dispensingStarted) {
-            // inputTDS = getTDS();
-            massNeeded = (targetTDS - inputTDS) * mixerVolume;
-            if (massNeeded > 0) {    
-                servoOpenTime = (massNeeded / dispenserflowrate) * 1000;
-                myServo.write(90);
-                dispensingStartTime = millis();
-                dispensingStarted = true;
-            }
-      }
-      if (dispensingStarted) {
-            if (millis() - dispensingStartTime >= servoOpenTime) {
-                myServo.write(0);
-                dispensingStarted = false;
-            }
-      }
+        //nutrient pumping (John) code
+        // STEP 1: Calculate required nutrient mass
+        if (!dispensingStarted) {
+                // inputTDS = getTDS();
+                massNeeded = (targetTDS - inputTDS) * mixerVolume;
+                if (massNeeded > 0) {    
+                    servoOpenTime = (massNeeded / dispenserflowrate) * 1000;
+                    myServo.write(90);
+                    dispensingStartTime = millis();
+                    dispensingStarted = true;
+                }
+        }
+        if (dispensingStarted) {
+                if (millis() - dispensingStartTime >= servoOpenTime) {
+                    myServo.write(0);
+                    dispensingStarted = false;
+                }
+        }
     }
     elif (stateMachine == 4){
       //mixing (Grace)
