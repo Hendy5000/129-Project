@@ -167,7 +167,6 @@ void loop() {
     }
     else if (stateMachine == 3){
       //nutrient pumping (John) code
-      // STEP 1: Calculate required nutrient mass
       if (!dispensingStarted) {
         inputTDS = initialTDS;
         massNeeded = (targetTDS - inputTDS) * mixerVolume;
