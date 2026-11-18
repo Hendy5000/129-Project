@@ -9,19 +9,28 @@ Hydroponics system
 #include "GravityTDS.h"
 
 //hardware map
-#define STARTBUTTONPIN
-#define STOPBUTTONPIN 
-#define MOTORPIN
-#define OLEDPIN
-#define SERVOPIN
-#define PHPROBEPIN
-#define 
+//Shield: M#
+#define MOTORPIN 1
+#define SUBMERGEDPIN 2
+#define DIAPHRAGMPIN 3
+#define PERISTALTICPIN 4
 
+//servo pin
+#define SERVOPIN 9
 
+//A#
+#define PHPROBEPIN 0
+#define LLPIN 3
+#define TDSPIN 2
+#define STARTBUTTONPIN 4
+#define STOPBUTTONPIN 5
+
+//special declaration for OLED
 #define SCREEN_WIDTH 128 // OLED display width, in pixels. 
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+#define OLED_I2C_ADDRESS 0x3C
 
 //pH probe calibration values
 #define V4 1.887
@@ -29,13 +38,17 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //Assorted values
 #define MIX_TIME 110000
+#define TARGETPH = 6
+#define PHSOLUTION = 5
 
 //TDS probe initiation
 GravityTDS tds;
 Servo myServo;
-AF_DCMotor motor(1); 
-AF_DCMotor spump(2);
-AF_DCMotor dpump(3);
+AF_DCMotor motor(MOTORPIN); 
+AF_DCMotor spump(SUBMERGEDPIN);
+AF_DCMotor dpump(DIAPHRAGMPIN);
+AF_DCMotor ppump(PERISTALTICPIN);
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -43,23 +56,32 @@ void setup() {
   int running = 0;
   int stopTimer = 0;
 
-  //serial monitor for debug - REMOVE WHEN DONE
+  //serial monitor for debug - REMOVE WHEN DONE FINAL TEST
   Serial.begin(9600);
 
-  //state machine: 0 = sensing state, 1 = water pumping state, 2 = pH pumping state, 3 = nutrient pumping state, 4 = mixing state, 5 = mixture pumping state, 6 = nutrient absorption state
+  //state machine: 0 = sensing state, 1 = water pumping state, 2 = pH pumping state, 3 = nutrient pumping state, 4 = mixing state, 5 = mixture pumping state, 6 = nutrient absorption state, 7 = done
   int stateMachine = 0;
-  char[][] stateMachineText = {"sensing state", "water pumping state", "pH pumping state", "nutrient pumping state", "mixing state", "mixture pumping state", "nutrient absorption state"};
+  char[][] stateMachineText = {"sensing state", "water pumping state", "pH pumping state", "nutrient pumping state", "mixing state", "mixture pumping state", "nutrient absorption state", "Done"};
 
   //OLED code
+  if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDRESS)) 
+  { 
+    Serial.println(F("SSD1306 allocation failed"));
+  }
+
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
+
+  //initiating LL sensor
+  pinMode(LLPIN, INPUT);
+  myServo.attach(SERVOPIN);
 
   //interupts
   attachInterrupt(digitalPinToInterrupt(STARTBUTTONPIN), startProgram, FALLING);
   attachInterrupt(digitalPinToInterrupt(STOPBUTTONPIN), emergencyStop, FALLING)
 
   //TDS sensor code
-  tds.setPin(tdsPin);
+  tds.setPin(TDSPIN);
   tds.setAref(5.0);       // The sensor needs to have the reference voltage for TDS calculation. For Arduino Mega, it is 5V
   tds.setAdcRange(1024);  
   tds.begin();
@@ -74,6 +96,9 @@ void setup() {
   unsigned long servoOpenTime = 0;
   bool dispensingStarted = false;
 
+  //mabel stuff
+  float totalPHTime;
+
   //Initial pH and TDS values, used for pH and nutrient dispensing
   float initialPH;
   float initialTDS;
@@ -82,6 +107,13 @@ void setup() {
   float pumpTimer = 0;
   float mixTimer = 0;
   float dpumpTimer = 0;
+  float phTimer = 0;
+
+  motor.run(RELEASE); 
+  spump.run(RELEASE);
+  dpump.run(RELEASE);
+  ppump.run(RELEASE);
+  myServo.write(0);
 }
 
 void loop() {
@@ -96,9 +128,9 @@ void loop() {
     display.print("Current state: ");
     display.println(stateMachineText[stateMachine]);
     display.print("pH: ");
-    display.println();
+    display.println(findPH());
     display.print("Turbidity: ");
-    display.print();
+    display.print(findTDS());
     
     //State machine that processes all the states.
     if (stateMachine == 0){
@@ -120,7 +152,18 @@ void loop() {
       }
     }
     else if (stateMachine == 2){
-      //pH pumping (Mabel) code
+      totalPHTime = (1/0.00059)*(200)*((pow(10, -TARGETPH)-pow(10, -14+TARGETPH)-pow(10, -initialPH)+pow(10, -14 + initialPH))/(pow(10, -PHSOLUTION)-pow(10, -14+PHSOLUTION)-pow(10, -TARGETPH)+pow(10, -14+TARGETPH)));
+
+      if (pHTimer == 0) {               
+        ppump.setSpeed(255);               
+        ppump.run(FORWARD);                
+        pHTimer = millis();           
+      }
+      if (millis() - pHTimer > totalPHTime) { 
+        motor.run(RELEASE);                  
+        pHTimer = 0;                
+        stateMachine = 3;     
+      }
     }
     else if (stateMachine == 3){
       //nutrient pumping (John) code
@@ -139,6 +182,7 @@ void loop() {
         if (millis() - dispensingStartTime >= servoOpenTime) {
             myServo.write(0);
             dispensingStarted = false;
+            stateMachine = 4;
         }
       }
     }
@@ -170,10 +214,21 @@ void loop() {
     }
     else if (stateMachine == 6){
       //waiting code
+      if (digitalRead(LLPIN)==HIGH){
+        stateMachine = 7;
+      }
     }
   }
   else{
     //digitalWrite(all pins, LOW) to make sure its all stopped
+
+    //release all so that once they come back online, they don't jolt
+    motor.run(RELEASE); 
+    spump.run(RELEASE);
+    dpump.run(RELEASE);
+    ppump.run(RELEASE);
+    myServo.write(0);
+    
     display.println("Current state: ");
     display.println("OFF");
     display.print("Press start to restart");
