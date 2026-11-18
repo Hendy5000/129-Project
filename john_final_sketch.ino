@@ -83,10 +83,10 @@ void loop() {
     elif (stateMachine == 3){
       //nutrient pumping (John) code
       //inputTDS = getTDS();
-      massNeeded = (targetTDS - inputTDS)/mixerVolume;
+      massNeeded = (targetTDS - inputTDS)*mixerVolume;
       if (massNeeded > 0) {
         servoOpenTime = massNeeded/dispenserflowrate;
-        servoMotor(servoOpenTime);
+        servoMotor(servoOpenTime*1000);
       }
     }
     elif (stateMachine == 4){
@@ -106,7 +106,7 @@ void loop() {
   delay(100);
 }
 
-void servoMotor(int openTime) {
+void servoMotor(float openTime) {
   myServo.write(90);
   delay(openTime);
   myServo.write(0);
