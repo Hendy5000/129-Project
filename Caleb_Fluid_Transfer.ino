@@ -2,9 +2,9 @@
 #define DIAPHRAGMPUMPPIN   
 
 const int PUMPSPEED = 255;              // 0-255, full speed
-int pumpTimer = 0;            // 0 = pump not started yet
-int waterPumpTime = 50000;    // ms - Jack's sensing state should set this
-int mixturePumpTime = 30000;  // ms - from your flow calibration
+long pumpTimer = 0;            // 0 = pump not started yet
+long waterPumpTime = 1000;    // Jack's sensing state should set this
+long mixturePumpTime = 1000;  // from flow calibration
 
 else if (stateMachine == 1){
       //water pump (Caleb) code
