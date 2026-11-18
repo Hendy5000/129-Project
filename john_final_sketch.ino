@@ -10,12 +10,15 @@ Hydroponics system
 #define SERVOPIN
 #define PHPROBEPIN
 #define 
+Servo myServo;
 
 void setup() {
   // put your setup code here, to run once:
-
+  myServo.attach(SERVOPIN);
   //serial monitor for debug - REMOVE WHEN DONE
   Serial.begin(9600);
+
+  
 
 
 }
@@ -25,8 +28,10 @@ void loop() {
 
 }
 
-void servoMotor() {
-  
+void servoMotor(int openTime) {
+  myServo.write(90);
+  delay(openTime);
+  myServo.write(0);
 }
 
 void peristalticPump() {
