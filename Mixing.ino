@@ -1,6 +1,6 @@
 else if (stateMachine == 4) { // main loop that jack made
 // my code that goes inside the else   
-  if (mixTimer == 0) {                     // when the mixTimer reads 0 the moter and the time will start
+  if (mixTimer == 0) {                     // when the mixTimer reads 0 the moter and the timer will start
     digitalWrite(MOTORPIN, HIGH);          // send power to moter
     mixTimer = millis();                   // records the time that the mixing starts at
   }
